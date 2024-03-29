@@ -24,6 +24,7 @@ void main() {
     await v1Database.close();
 
     database = MyDatabase(schema.newConnection());
+
     await verifier.migrateAndValidate(database, database.schemaVersion /*2*/);
   });
 
@@ -33,6 +34,7 @@ void main() {
       final v1Database = v1.DatabaseAtV1(schema.newConnection());
       await v1Database.close();
 
+      // custom insert to insert data that does not exist on new generated data/companion classes
       await v1Database.customInsert("INSERT INTO my_table (id, notes) VALUES ('1', 'old notes')");
 
       database = MyDatabase(schema.newConnection());
@@ -42,6 +44,7 @@ void main() {
       final rows = await database.customSelect('select * from my_table').get();
       print(rows.first.data); // {id: 1, added_real_column: added_real_column}
 
+      // will throw because String 'added_real_column' cannot be converted to a 'num' value for field addedRealColumn, default value is not used
       final actual = await database.myTable.select().get();
       expect(actual, const [MyTableData(id: '1', addedRealColumn: null)]);
     } catch (error) {
